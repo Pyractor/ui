@@ -2,6 +2,18 @@ import React, { useState, useEffect, useCallback } from "react";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 import debounce from "lodash.debounce";
 
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
+import Slider from "@mui/material/Slider";
+
+const darkTheme = createTheme({
+  palette: {
+    mode: "dark",
+  },
+});
+
 interface Hello {
   session: string;
 }
@@ -70,7 +82,7 @@ const RenderButton = (props: {
 
   return (
     <div>
-      <button onClick={() => onChange(id, -1)}>{state.label}</button>
+      <Button onClick={() => onChange(id, -1)}>{state.label}</Button>
     </div>
   );
 };
@@ -83,29 +95,28 @@ const RenderSlider = (props: {
   const { state, id, onChange } = props;
   const [value, setValue] = useState(state.value);
 
-  const change = (v: string) => {
-    const n = parseInt(v, 10);
-    setValue(n);
+  const change = (v: number) => {
+    setValue(v);
   };
 
   const sync = useCallback(
-    debounce((v: string) => {
-      const n = parseInt(v, 10);
-      onChange(id, n);
+    debounce((v: number) => {
+      onChange(id, v);
     }, 500),
     [id, onChange]
   );
 
   return (
     <div>
-      <input
-        type="range"
+      <Slider
         min={state.min}
         max={state.max}
         value={value}
-        onChange={(e) => {
-          change(e.target.value);
-          sync(e.target.value);
+        onChange={(e, v) => {
+          if (!Array.isArray(v)) {
+            change(v);
+            sync(v);
+          }
         }}
       />
     </div>
@@ -147,7 +158,7 @@ const RenderElement = (props: {
 const RenderState = (props: { state: State; onChange: ChangeCb }) => {
   const { state, onChange } = props;
   return (
-    <div>
+    <Box>
       {state.order
         .filter((id: string) => state.registry[id].visible)
         .map((id: string) => (
@@ -158,7 +169,7 @@ const RenderState = (props: { state: State; onChange: ChangeCb }) => {
             onChange={onChange}
           />
         ))}
-    </div>
+    </Box>
   );
 };
 
@@ -213,16 +224,19 @@ function App() {
   (window as any)["debugme"] = () => setIsDebug((debug) => !debug);
 
   return (
-    <div className="App">
+    <ThemeProvider theme={darkTheme}>
       {loading && (
-        <span style={{ position: "absolute", top: 10, right: 10 }}>
-          Loading...
-        </span>
+        <Chip
+          sx={{ position: "absolute", top: 10, right: 10 }}
+          color="info"
+          variant="filled"
+          label="Loading..."
+        />
       )}
       <RenderState state={appState} onChange={change} />
       {isDebug && <pre>{JSON.stringify(appState, null, 2)}</pre>}
       {isDebug && <pre>{JSON.stringify(messageHistory, null, 2)}</pre>}
-    </div>
+    </ThemeProvider>
   );
 }
 
