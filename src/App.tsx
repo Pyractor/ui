@@ -15,9 +15,13 @@ interface StateSync {
   state: any;
 }
 
+interface Loading {
+  loading: boolean;
+}
+
 interface MessageIn {
   kind: string;
-  message: StateSync;
+  message: StateSync | Loading;
 }
 
 interface MessageOut {
@@ -162,6 +166,7 @@ const RenderState = (props: { state: State; onChange: ChangeCb }) => {
 
 function App() {
   const [isDebug, setIsDebug] = useState(process.env.NODE_ENV !== "production");
+  const [loading, setLoading] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [appState, setAppState] = useState<State>({ registry: {}, order: [] });
   const [socketUrl, setSocketUrl] = useState("ws://localhost:1337");
@@ -178,7 +183,10 @@ function App() {
       const json = lastMessage.data;
       const msg = JSON.parse(json) as MessageIn;
       if (msg.kind === "StateSync") {
-        setAppState(msg.message.state);
+        setAppState((msg.message as StateSync).state);
+      }
+      if (msg.kind === "Loading") {
+        setLoading((msg.message as Loading).loading);
       }
       console.log(msg);
       setMessageHistory((prev) => prev.concat(msg));
@@ -208,6 +216,11 @@ function App() {
 
   return (
     <div className="App">
+      {loading && (
+        <span style={{ position: "absolute", top: 10, right: 10 }}>
+          Loading...
+        </span>
+      )}
       <RenderState state={appState} onChange={change} />
       {isDebug && <pre>{JSON.stringify(appState, null, 2)}</pre>}
       {isDebug && <pre>{JSON.stringify(messageHistory, null, 2)}</pre>}
