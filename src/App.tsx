@@ -41,7 +41,14 @@ interface MDState {
   md: string;
 }
 
-type ElementState = SliderState | MDState;
+interface ButtonState {
+  id: string;
+  kind: string;
+  visible: boolean;
+  label: string;
+}
+
+type ElementState = SliderState | MDState | ButtonState;
 
 type ChangeCb = (id: string, value: any) => void;
 
@@ -49,6 +56,20 @@ interface State {
   registry: Record<string, ElementState>;
   order: Array<string>;
 }
+
+const RenderButton = (props: {
+  id: string;
+  state: ButtonState;
+  onChange: ChangeCb;
+}) => {
+  const { state, id, onChange } = props;
+
+  return (
+    <div>
+      <button onClick={() => onChange(id, -1)}>{state.label}</button>
+    </div>
+  );
+};
 
 const RenderSlider = (props: {
   id: string;
@@ -67,7 +88,7 @@ const RenderSlider = (props: {
     debounce((v: string) => {
       const n = parseInt(v, 10);
       onChange(id, n);
-    }, 1000),
+    }, 500),
     [id, onChange]
   );
 
@@ -111,6 +132,13 @@ const RenderElement = (props: {
       )}
       {state.visible && state.kind === "MD" && (
         <RenderMD id={id} state={state as MDState} />
+      )}
+      {state.visible && state.kind === "Button" && (
+        <RenderButton
+          id={id}
+          state={state as ButtonState}
+          onChange={onChange}
+        />
       )}
     </div>
   );
@@ -169,15 +197,6 @@ function App() {
     }
   }, [initialized, setInitialized, readyState]);
 
-  const handleClickSendMessage = useCallback(
-    () =>
-      send({
-        kind: "Hello",
-        message: { session: "session" },
-      }),
-    []
-  );
-
   const change = (id: string, value: any) => {
     send({
       kind: "Change",
@@ -189,7 +208,6 @@ function App() {
 
   return (
     <div className="App">
-      <button onClick={handleClickSendMessage}>CLICK</button>
       <RenderState state={appState} onChange={change} />
       {isDebug && <pre>{JSON.stringify(appState, null, 2)}</pre>}
       {isDebug && <pre>{JSON.stringify(messageHistory, null, 2)}</pre>}
