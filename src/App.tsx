@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 import debounce from "lodash.debounce";
+import ReactMarkdown from "react-markdown";
 
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
@@ -126,7 +127,7 @@ const RenderSlider = (props: {
 const RenderMD = (props: { id: string; state: MDState }) => {
   const { state, id } = props;
 
-  return <div>{state.md}</div>;
+  return <ReactMarkdown>{state.md}</ReactMarkdown>;
 };
 
 const RenderElement = (props: {
