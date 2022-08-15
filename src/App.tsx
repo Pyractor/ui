@@ -125,41 +125,39 @@ const RenderElement = (props: {
 }) => {
   const { state, id, onChange } = props;
 
-  return (
-    <div>
-      {state.visible && state.kind === "Slider" && (
-        <RenderSlider
-          id={id}
-          state={state as SliderState}
-          onChange={onChange}
-        />
-      )}
-      {state.visible && state.kind === "MD" && (
-        <RenderMD id={id} state={state as MDState} />
-      )}
-      {state.visible && state.kind === "Button" && (
-        <RenderButton
-          id={id}
-          state={state as ButtonState}
-          onChange={onChange}
-        />
-      )}
-    </div>
-  );
+  if (state.kind === "Slider") {
+    return (
+      <RenderSlider id={id} state={state as SliderState} onChange={onChange} />
+    );
+  }
+
+  if (state.kind === "MD") {
+    return <RenderMD id={id} state={state as MDState} />;
+  }
+
+  if (state.kind === "Button") {
+    return (
+      <RenderButton id={id} state={state as ButtonState} onChange={onChange} />
+    );
+  }
+
+  return <div>UNKNOWN ELEMENT {state.kind}</div>;
 };
 
 const RenderState = (props: { state: State; onChange: ChangeCb }) => {
   const { state, onChange } = props;
   return (
     <div>
-      {state.order.map((id: string) => (
-        <RenderElement
-          id={id}
-          state={state.registry[id]}
-          key={id}
-          onChange={onChange}
-        />
-      ))}
+      {state.order
+        .filter((id: string) => state.registry[id].visible)
+        .map((id: string) => (
+          <RenderElement
+            id={id}
+            state={state.registry[id]}
+            key={id}
+            onChange={onChange}
+          />
+        ))}
     </div>
   );
 };
